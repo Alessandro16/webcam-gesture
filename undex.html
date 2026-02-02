@@ -1,0 +1,35 @@
+<video id="webcam" autoplay playsinline style="display: none;"></video>
+<canvas id="output_canvas" style="position: fixed; top: 0; left: 0; z-index: 10;"></canvas>
+
+import { HandLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0";
+
+let handLandmarker;
+const video = document.getElementById("webcam");
+
+// 1. Inizializza il lettore di mani
+const createHandLandmarker = async () => {
+  const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm");
+  handLandmarker = await HandLandmarker.createFromOptions(vision, {
+    baseOptions: { modelAssetPath: `https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task` },
+    runningMode: "VIDEO",
+    numHands: 2
+  });
+};
+createHandLandmarker();
+
+function predictWebcam() {
+  let results = handLandmarker.detectForVideo(video, performance.now());
+  if (results.landmarks) {
+    for (const landmarks of results.landmarks) {
+      // Landmarks[8] è la punta dell'indice
+      const indexFingerTip = landmarks[8];
+      
+      // LOGICA: Se l'indice è nella metà sinistra dello schermo...
+      if (indexFingerTip.x < 0.5) {
+         console.log("Mano a sinistra!");
+         // Qui puoi far sparire un bottone o cambiare colore
+      }
+    }
+  }
+  window.requestAnimationFrame(predictWebcam);
+}
